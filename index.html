@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Index of /bluearch/x86_64/</title>
+    <style>
+        body { font-family: 'Courier New', Courier, monospace; background-color: #f4f4f4; color: #333; padding: 20px; }
+        h1 { border-bottom: 2px solid #000; padding-bottom: 10px; font-size: 24px; color: #000; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; background: white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        th, td { text-align: left; padding: 12px; border-bottom: 1px solid #eee; }
+        th { background: #333; color: #fff; }
+        tr:hover { background: #f1f1f1; }
+        a { color: #0066cc; text-decoration: none; font-weight: bold; }
+        a:hover { text-decoration: underline; }
+        .footer { margin-top: 30px; border-top: 2px solid #000; padding-top: 15px; font-size: 13px; color: #444; font-weight: bold; }
+        .size-cell { white-space: nowrap; }
+        .error-msg { color: #d9534f; font-weight: bold; padding: 10px; border: 1px solid #d9534f; display: none; }
+    </style>
+</head>
+<body>
+
+<h1>BlueArch Linux | Official Repository Index</h1>
+
+<div id="error-banner" class="error-msg">Error: Unable to fetch repository data. API rate limit might be reached.</div>
+
+<table>
+    <thead>
+        <tr>
+            <th>File Name</th>
+            <th>Last Modified</th>
+            <th>Size</th>
+        </tr>
+    </thead>
+    <tbody id="file-list">
+        <tr>
+            <td><a href="../">.. (Parent Directory)</a></td>
+            <td>-</td>
+            <td>-</td>
+        </tr>
+    </tbody>
+</table>
+
+<div class="footer">
+    BlueArch Network Mirror System — Maintained by p1rater
+</div>
+
+<script>
+    /**
+     * Configuration for BlueArch Repository
+     */
+    const CONFIG = {
+        username: 'p1rater',
+        repo: 'BlueArch-Repo',
+        branch: 'main',
+        directory: 'x86_64'
+    };
+
+    async function fetchRepoContents() {
+        const listElement = document.getElementById('file-list');
+        const errorBanner = document.getElementById('error-banner');
+
+        try {
+            const apiUrl = `https://api.github.com/repos/${CONFIG.username}/${CONFIG.repo}/contents/${CONFIG.directory}?ref=${CONFIG.branch}`;
+            const response = await fetch(apiUrl);
+            
+            if (!response.ok) throw new Error('Network response was not ok');
+            
+            const files = await response.json();
+
+            // Filter out index.html and directories, then sort by name
+            const filteredFiles = files
+                .filter(file => file.name !== 'index.html' && file.type === 'file')
+                .sort((a, b) => a.name.localeCompare(b.name));
+
+            filteredFiles.forEach(file => {
+                const tr = document.createElement('tr');
+                
+                // Convert bytes to MB
+                const sizeMB = file.size > 0 ? (file.size / (1024 * 1024)).toFixed(2) + " MB" : "-";
+                
+                // Standard date (Note: GitHub API 'contents' doesn't provide per-file commit dates easily)
+                const dateStr = new Date().toISOString().split('T')[0];
+
+                tr.innerHTML = `
+                    <td><a href="${file.download_url}">${file.name}</a></td>
+                    <td>${dateStr}</td>
+                    <td class="size-cell">${sizeMB}</td>
+                `;
+                listElement.appendChild(tr);
+            });
+
+        } catch (error) {
+            console.error("Repository fetch error:", error);
+            errorBanner.style.display = 'block';
+        }
+    }
+
+    // Initialize the fetch process
+    fetchRepoContents();
+</script>
+
+</body>
+</html>
