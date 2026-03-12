@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Index of /bluearch/</title>
+    <title>BlueArch Linux | Repository Index</title>
     <style>
         body { font-family: 'Courier New', Courier, monospace; background-color: #f4f4f4; color: #333; padding: 20px; }
         h1 { border-bottom: 2px solid #000; padding-bottom: 10px; font-size: 24px; color: #000; }
@@ -16,20 +16,18 @@
         .footer { margin-top: 30px; border-top: 2px solid #000; padding-top: 15px; font-size: 13px; color: #444; font-weight: bold; }
         .size-cell { white-space: nowrap; }
         .error-msg { color: #d9534f; font-weight: bold; padding: 10px; border: 1px solid #d9534f; display: none; }
-        .type-dir { color: #e67e22; font-weight: bold; } /* Klasörleri ayırmak için */
     </style>
 </head>
 <body>
 
-<h1>BlueArch Linux | Root Repository Index</h1>
+<h1>BlueArch Linux | Official Repository Index</h1>
 
 <div id="error-banner" class="error-msg">Error: Unable to fetch repository data. API rate limit might be reached.</div>
 
 <table>
     <thead>
         <tr>
-            <th>Name</th>
-            <th>Type</th>
+            <th>File Name</th>
             <th>Last Modified</th>
             <th>Size</th>
         </tr>
@@ -47,7 +45,7 @@
         username: 'p1rater',
         repo: 'BlueArch-Repo',
         branch: 'main',
-        directory: '' // Ana dizin için boş bırakıldı
+        directory: '' // Ana dizin olduğu için burayı boş bıraktık
     };
 
     async function fetchRepoContents() {
@@ -62,29 +60,22 @@
             
             const files = await response.json();
 
-            // index.html ve gizli dosyaları filtrele
+            // index.html, CNAME ve DEVELOPER_NOTES gibi sistem dosyalarını listeden gizleyelim
+            const excludeFiles = ['index.html', 'CNAME', 'DEVELOPER_NOTES.md', 'README.md', '.gitkeep'];
+
             const filteredFiles = files
-                .filter(file => file.name !== 'index.html' && !file.name.startsWith('.'))
-                .sort((a, b) => {
-                    // Önce klasörleri göster
-                    if (a.type === b.type) return a.name.localeCompare(b.name);
-                    return a.type === 'dir' ? -1 : 1;
-                });
+                .filter(file => !excludeFiles.includes(file.name) && file.type === 'file')
+                .sort((a, b) => a.name.localeCompare(b.name));
 
             filteredFiles.forEach(file => {
                 const tr = document.createElement('tr');
-                const isDir = file.type === 'dir';
-                
-                // Klasörler için boyut gösterme, dosyalar için MB'a çevir
-                const sizeDisplay = isDir ? "-" : (file.size / (1024 * 1024)).toFixed(2) + " MB";
-                const typeDisplay = isDir ? "[DIR]" : "[FILE]";
+                const sizeMB = file.size > 0 ? (file.size / (1024 * 1024)).toFixed(2) + " MB" : "-";
                 const dateStr = new Date().toISOString().split('T')[0];
 
                 tr.innerHTML = `
-                    <td><a href="${isDir ? file.name + '/' : file.download_url}">${file.name}${isDir ? '/' : ''}</a></td>
-                    <td class="${isDir ? 'type-dir' : ''}">${typeDisplay}</td>
+                    <td><a href="${file.download_url}">${file.name}</a></td>
                     <td>${dateStr}</td>
-                    <td class="size-cell">${sizeDisplay}</td>
+                    <td class="size-cell">${sizeMB}</td>
                 `;
                 listElement.appendChild(tr);
             });
